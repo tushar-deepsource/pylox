@@ -80,11 +80,19 @@ class Parser:
         comparison -> term ((">" | ">=" | "<" | "<=") term)*
         term -> factor (("+" / "-") factor)*
         factor -> unary (("*" / "/") unary)*
-        unary -> ("-" | "!") unary | call
+        unary -> ("-" | "!") unary | power
+        power -> call ** power | call
         call -> primary ("(" arguments? ")")*
         arguments -> expression ("," expression)*
-        primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")"
-                | IDENTIFIER | "super" "." IDENTIFIER
+        primary -> INTEGER
+                 | FLOAT
+                 | STRING
+                 | "true"
+                 | "false"
+                 | "nil"
+                 | "(" expression ")"
+                 | IDENTIFIER
+                 | "super" "." IDENTIFIER
     """
 
     def __init__(self, tokens: list[Token]) -> None:
@@ -388,15 +396,14 @@ class Parser:
             if isinstance(expr, Variable):
                 return Assignment(expr.name, value, index=expr.index)
 
-            elif isinstance(expr, Get):
+            if isinstance(expr, Get):
                 return Set(expr.object, expr.name, value, index=expr.index)
 
-            else:
-                type_name = expr.__class__.__name__
-                raise ParseError(
-                    f"Invalid assign target: {type_name!r}",
-                    equals_token,
-                )
+            type_name = expr.__class__.__name__
+            raise ParseError(
+                f"Invalid assign target: {type_name!r}",
+                equals_token,
+            )
 
         # If it's not assignment, it's equality (or anything below)
         return expr
@@ -462,7 +469,12 @@ class Parser:
     def parse_factor(self) -> Expr:
         left = self.parse_unary()
 
-        while self.match_next(TokenType.STAR, TokenType.SLASH, TokenType.PERCENT):
+        while self.match_next(
+            TokenType.STAR,
+            TokenType.SLASH,
+            TokenType.PERCENT,
+            TokenType.BACKSLASH,
+        ):
             operator = self.previous()
             right = self.parse_unary()
 
@@ -476,7 +488,16 @@ class Parser:
             right = self.parse_unary()
             return Unary(operator, right, index=operator.index)
 
-        return self.parse_call_or_get()
+        return self.parse_power()
+
+    def parse_power(self) -> Expr:
+        left = self.parse_call_or_get()
+        if self.match_next(TokenType.STARSTAR):
+            operator = self.previous()
+            right = self.parse_power()
+            left = Binary(left, operator, right, index=left.index)
+
+        return left
 
     def parse_call_or_get(self) -> Expr:
         expr = self.parse_primary()
@@ -537,7 +558,7 @@ class Parser:
             eof_token = self.get_token()
             raise ParseEOFError("Unexpected end of file while parsing", eof_token)
 
-        if self.match_next(TokenType.STRING, TokenType.NUMBER):
+        if self.match_next(TokenType.STRING, TokenType.INTEGER, TokenType.FLOAT):
             token = self.previous()
             return Literal(token.value, index=token.index)
 

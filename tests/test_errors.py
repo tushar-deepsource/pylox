@@ -16,6 +16,23 @@ from pylox.parser import ParseError, Parser
 from pylox.resolver import Resolver
 
 
+def test_file_not_found(capsys: CaptureFixture[str]) -> None:
+    """Tests the error message when a wrong path is passed to pylox."""
+    with pytest.raises(SystemExit):
+        pylox_main(argv=["nonexistent_file.py"])
+
+    stdout, stderr = capsys.readouterr()
+    assert stderr == ""
+    assert stdout == "Error: given path does not exist\n"
+
+    with pytest.raises(SystemExit):
+        pylox_main(argv=["tests"])
+
+    stdout, stderr = capsys.readouterr()
+    assert stderr == ""
+    assert stdout == "Error: given path is a directory\n"
+
+
 @pytest.mark.parametrize(
     ("source", "error"),
     ((r'"a\b"', r"Unknown escape sequence: '\b'"),),
@@ -174,8 +191,8 @@ def test_parse_fail_files(
     ("source", "error"),
     (
         ("x;", "Undefined variable 'x'"),
-        ("print -true;", "Expected 'Number' for unary '-', got 'Boolean'"),
-        ("2 > '3';", "Unsupported types for '>': 'Number' and 'String'"),
+        ("print -true;", "Expected 'Integer' or 'Float' for unary '-', got 'Boolean'"),
+        ("2 > '3';", "Unsupported types for '>': 'Integer' and 'String'"),
         ("nil();", "'nil' object is not callable"),
         ("fun f(){} f.foo;", "Cannot access properties inside 'Function'"),
         ("class C {} C.foo = 5;", "Cannot set properties on 'Class'"),
@@ -187,7 +204,7 @@ def test_parse_fail_files(
         ("print 3 / 0;", "Division by zero"),
         ("fun f(a) {print a;} f();", "<function 'f'> expected 1 arguments, got 0"),
         ("class C {init(a, b) {}} C(10);", "<class 'C'> expected 2 arguments, got 1"),
-        ("dir(10);", "dir() can only be used on classes and objects, not 'Number'"),
+        ("dir(5.5);", "dir() can only be used on classes and objects, not 'Float'"),
     ),
 )
 def test_interpreter_fail(source: str, error: str) -> None:
@@ -252,7 +269,7 @@ def test_run(capsys: CaptureFixture[str], monkeypatch: MonkeyPatch) -> None:
 
     stdout, stderr = capsys.readouterr()
     assert stderr == (
-        "usage: lox [-h] [--debug] [filename]\n"
+        "usage: lox [-h] [-i] [--debug] [filename]\n"
         "lox: error: unrecognized arguments: b.lox\n"
     )
     assert stdout == ""
@@ -267,7 +284,7 @@ def test_run(capsys: CaptureFixture[str], monkeypatch: MonkeyPatch) -> None:
     assert stderr == ""
     expected = dedent(
         """\
-        > > 5.0
+        > > 5
         > Error in <input>:1:6
 
             print y;
@@ -312,10 +329,32 @@ def test_run(capsys: CaptureFixture[str], monkeypatch: MonkeyPatch) -> None:
     assert output[-1].startswith("RecursionError: maximum recursion depth exceeded")
 
 
-def test_run_interactive(
+def test_interactive_flag(
     capsys: CaptureFixture[str],
     monkeypatch: MonkeyPatch,
 ) -> None:
+    monkeypatch.setattr("sys.argv", ["lox", "-i", "tests/testdata/simple.lox"])
+    monkeypatch.setattr("sys.stdin", io.StringIO("print !a;"))
+
+    with pytest.raises(SystemExit):
+        pylox_main()
+
+    stdout, stderr = capsys.readouterr()
+    assert stderr == ""
+    expected = dedent(
+        """\
+        Hello
+        5
+        false
+        27.0
+        > true
+        >
+        """
+    )
+    assert stdout.strip() == expected.strip()
+
+
+def test_run_interactive(capsys: CaptureFixture[str], monkeypatch: MonkeyPatch) -> None:
     input_counter = 0
     lines = [
         "var x = (",
@@ -349,7 +388,7 @@ def test_run_interactive(
         line = lines[input_counter]
         input_counter += 1
 
-        # This emulates user input
+        # This emulates user input showing up on terminal
         print(line)
 
         return line
@@ -365,7 +404,7 @@ def test_run_interactive(
     ... 
     > var x = 5;
     > print x;
-    5.0
+    5
     > print '
     ... abc';
 
@@ -390,16 +429,13 @@ def test_run_interactive(
     > false;
     false
     > 2 + 2;
-    4.0
+    4
     > 
     """
     assert stdout.rstrip() == dedent(expected).rstrip()
 
 
-def test_crash_handling(
-    capsys: CaptureFixture[str],
-    monkeypatch: MonkeyPatch,
-) -> None:
+def test_crash_handling(capsys: CaptureFixture[str], monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr("sys.stdin", io.StringIO("fun f() { f(); } f();\nprint 10;"))
     run_interactive()
 
@@ -410,7 +446,7 @@ def test_crash_handling(
         > Internal Error:
         RecursionError: maximum recursion depth exceeded while calling a Python object
         Use the --debug flag to generate a stack trace.
-        > 10.0
+        > 10
         >
     """
     assert stdout.rstrip() == dedent(expected).rstrip()

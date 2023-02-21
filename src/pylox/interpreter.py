@@ -4,7 +4,7 @@ import time
 
 from pylox.environment import Environment, EnvironmentLookupError
 from pylox.errors import LoxError
-from pylox.lox_types import LoxType, Number
+from pylox.lox_types import Boolean, Float, Integer, LoxType, String
 from pylox.nodes import (
     Assignment,
     Binary,
@@ -42,7 +42,7 @@ class NativeClock:
         return "<native function 'clock'>"
 
     @staticmethod
-    def call(_: Interpreter, __: list[LoxType]) -> Number:
+    def call(_: Interpreter, __: list[LoxType]) -> Float:
         return time.time()
 
     @staticmethod
@@ -75,10 +75,25 @@ class Dir:
         return 1
 
 
+class Input:
+    def __repr__(self) -> str:
+        return "<native function 'input'>"
+
+    @staticmethod
+    def call(_: Interpreter, arguments: list[LoxType]) -> String:
+        (prompt,) = arguments
+        return input(prompt)
+
+    @staticmethod
+    def arity() -> int:
+        return 1
+
+
 def create_globals() -> Environment:
     globals = Environment()
     globals.define("clock", NativeClock())
     globals.define("dir", Dir())
+    globals.define("input", Input())
     return globals
 
 
@@ -241,16 +256,18 @@ class Interpreter(Visitor[LoxType]):
     def visit_Unary(self, unary: Unary) -> LoxType:
         if unary.operator.token_type == TokenType.MINUS:
             right_value = self.evaluate(unary.right)
-            if not isinstance(right_value, Number):
+            if isinstance(right_value, Boolean) or not isinstance(
+                right_value, (Integer, Float)
+            ):
                 value_type = get_lox_type_name(right_value)
                 raise InterpreterError(
-                    f"Expected 'Number' for unary '-', got {value_type!r}",
+                    f"Expected 'Integer' or 'Float' for unary '-', got {value_type!r}",
                     unary,
                 )
 
             return -right_value
 
-        elif unary.operator.token_type == TokenType.BANG:
+        if unary.operator.token_type == TokenType.BANG:
             right_value = self.evaluate(unary.right)
             if is_truthy(right_value):
                 return False
@@ -289,19 +306,26 @@ class Interpreter(Visitor[LoxType]):
         ):
             return left_value + right_value
 
-        if isinstance(left_value, Number) and isinstance(right_value, Number):
+        if isinstance(left_value, (Integer, Float)) and isinstance(
+            right_value, (Integer, Float)
+        ):
             if binary.operator.token_type == TokenType.PLUS:
                 return left_value + right_value
             if binary.operator.token_type == TokenType.MINUS:
                 return left_value - right_value
             if binary.operator.token_type == TokenType.STAR:
                 return left_value * right_value
+            if binary.operator.token_type == TokenType.STARSTAR:
+                # typeshed bug: https://github.com/python/typeshed/pull/7682
+                return left_value**right_value  # type: ignore
             if binary.operator.token_type == TokenType.SLASH:
                 if right_value == 0:
                     raise InterpreterError("Division by zero", binary.right)
                 return left_value / right_value
             if binary.operator.token_type == TokenType.PERCENT:
                 return left_value % right_value
+            if binary.operator.token_type == TokenType.BACKSLASH:
+                return left_value // right_value
 
             if binary.operator.token_type == TokenType.GREATER:
                 return left_value > right_value
@@ -313,7 +337,7 @@ class Interpreter(Visitor[LoxType]):
                 return left_value <= right_value
 
         raise InterpreterError(
-            f"Unsupported types for {binary.operator.token_type.value!r}: "
+            f"Unsupported types for '{binary.operator.token_type.value}': "
             f"{get_lox_type_name(left_value)!r} and {get_lox_type_name(right_value)!r}",
             binary,
         )

@@ -86,33 +86,29 @@ There's a small number of changes from the reference language:
   This lets us simplify the resolver code: We don't need a separate `declare`
   and `define` method anymore, and each scope is a set, not a dictionary.
 
-- You can access methods directly on a class, you don't need to necessarily
-  create an object to do so. Doing this returns an "unbound method". The main
-  reason to do this is for better DX, and to allow `dir(C)` to work. It is not
-  yet decided if unbound methods are just not usable at all, or if some sort of
-  binding mechanism will be implemented to allow for that. [TODO]
-
 Here's the full set of extra features, and their progress:
 
 - [x] _Much_ better error messages
 - [x] Allowing single quotes for strings
 - [x] String escapes: `\n`, `\t`, `\'`, `\"`, `\\` and `\↵`
-- [ ] New operators:
+- [x] New operators:
   - [x] Modulo `%`
-  - [ ] Integer division `\`
-  - [ ] Power `**`
+  - [x] Integer division `\`
+  - [x] Power `**`
 - [ ] Augmented versions of all operators: `+=`, `**=`, etc.
 - [ ] New data types:
-  - [ ] int: `42`
+  - [x] int: `42`
   - [ ] list: `[42, 56]`
   - [ ] dictionary: `{42: "Forty two"}`
 - [ ] Indexing support: for lists, dictionaries and strings
 - [ ] Comparison operators work on strings
 - [ ] `break` and `continue` semantics in loops
 - [ ] Exceptions, `try` / `except` blocks and `raise` statements
+- [ ] Default values for function parameters
+- [ ] `*args`
 - [ ] Added builtin functions:
-  - [ ] `input`
-  - [ ] `format` (Python equivalent, for string interpolation)
+  - [x] `input`
+  - [ ] `format` (Python `str.format` equivalent, for string interpolation)
   - [ ] `min`, `max` and `abs`
   - [ ] `map`, `filter` and `reduce` that take lists and return new lists
   - [x] `dir` to print out an object's attributes

@@ -12,40 +12,21 @@ from pylox.lexer import Lexer, LexError, LexIncompleteError
 from pylox.nodes import ExprStmt
 from pylox.parser import ParseEOFError, ParseError, Parser
 from pylox.resolver import Resolver
+from pylox.utils import get_snippet_line_col
 
 
 def read_file(filename: str) -> str:
-    with open(filename) as file:
-        source = file.read()
+    try:
+        with open(filename) as file:
+            source = file.read()
+    except IsADirectoryError:
+        print("Error: given path is a directory")
+        raise SystemExit(1)
+    except FileNotFoundError:
+        print("Error: given path does not exist")
+        raise SystemExit(1)
 
     return source
-
-
-def get_snippet_line_col(source: str, index: int) -> tuple[int, int, str]:
-    """Returns line number, column number and line of code at the given index."""
-    line, col = 1, 0
-
-    current = 0
-    snippet_start_index = 0
-    for char in source:
-        if current == index:
-            break
-
-        if char == "\n":
-            snippet_start_index = current + 1
-            line += 1
-            col = 0
-        else:
-            col += 1
-
-        current += 1
-
-    while current < len(source) and source[current] != "\n":
-        current += 1
-
-    snippet_end_index = current
-    snippet = source[snippet_start_index:snippet_end_index]
-    return line, col, snippet
 
 
 class PyloxArgs(argparse.Namespace):
@@ -57,21 +38,37 @@ class PyloxArgs(argparse.Namespace):
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
+        "-i",
+        "--interactive",
+        action="store_true",
+        help="Run pylox in interactive mode",
+    )
+    parser.add_argument(
         "--debug",
         action="store_true",
-        help="Run in interactive mode",
+        help="Print a stack trace when a crash occurs",
     )
     parser.add_argument("filename", help="Name of file to run", nargs="?")
     args = parser.parse_args(argv, namespace=PyloxArgs())
 
     if args.filename is None:
-        raise SystemExit(run_interactive(debug=args.debug))
+        raise SystemExit(run_interactive(args.debug))
 
-    raise SystemExit(run(args.filename, debug=args.debug))
+    if args.interactive:
+        interpreter = Interpreter()
+        run(args.filename, args.debug, interpreter)
+        raise SystemExit(run_interactive(args.debug, interpreter))
+
+    raise SystemExit(run(args.filename, args.debug))
 
 
-def run_interactive(debug: bool = False) -> int:
-    interpreter = Interpreter()
+def run_interactive(
+    debug: bool = False,
+    interpreter: Interpreter | None = None,
+) -> int:
+    if interpreter is None:
+        interpreter = Interpreter()
+
     lines: list[str] = []
     while True:
         try:
@@ -132,7 +129,11 @@ def run_interactive(debug: bool = False) -> int:
             print_exception(exc, debug=debug)
 
 
-def run(filepath: str, debug: bool = False) -> int:
+def run(
+    filepath: str,
+    debug: bool = False,
+    interpreter: Interpreter | None = None,
+) -> int:
     source = read_file(filepath)
     filename = os.path.basename(filepath)
     try:
@@ -150,7 +151,8 @@ def run(filepath: str, debug: bool = False) -> int:
             pretty_print_error(source, filename, errors[0])
         return 1
 
-    interpreter = Interpreter()
+    if interpreter is None:
+        interpreter = Interpreter()
 
     resolver = Resolver(interpreter)
     try:

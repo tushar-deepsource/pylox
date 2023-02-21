@@ -8,8 +8,35 @@ if TYPE_CHECKING:
 
 from attr import asdict
 
-from pylox.lox_types import Boolean, LoxCallable, LoxType, Number, String
+from pylox.lox_types import Boolean, Float, Integer, LoxCallable, LoxType, String
 from pylox.nodes import Node
+
+
+def get_snippet_line_col(source: str, index: int) -> tuple[int, int, str]:
+    """Returns line number, column number and line of code at the given index."""
+    line, col = 1, 0
+
+    current = 0
+    snippet_start_index = 0
+    for char in source:
+        if current == index:
+            break
+
+        if char == "\n":
+            snippet_start_index = current + 1
+            line += 1
+            col = 0
+        else:
+            col += 1
+
+        current += 1
+
+    while current < len(source) and source[current] != "\n":
+        current += 1
+
+    snippet_end_index = current
+    snippet = source[snippet_start_index:snippet_end_index]
+    return line, col, snippet
 
 
 def get_lox_type_name(value: LoxType) -> str:
@@ -24,8 +51,11 @@ def get_lox_type_name(value: LoxType) -> str:
     if isinstance(value, String):
         return "String"
 
-    if isinstance(value, Number):
-        return "Number"
+    if isinstance(value, Integer):
+        return "Integer"
+
+    if isinstance(value, Float):
+        return "Float"
 
     if isinstance(value, LoxFunction):
         return "Function"
@@ -44,7 +74,7 @@ def is_truthy(value: LoxType) -> bool:
     if value is None:
         return False
 
-    if isinstance(value, (String, Number, Boolean)):
+    if isinstance(value, (String, Integer, Float, Boolean)):
         return bool(value)
 
     raise NotImplementedError(
