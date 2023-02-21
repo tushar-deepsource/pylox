@@ -316,8 +316,7 @@ class Interpreter(Visitor[LoxType]):
             if binary.operator.token_type == TokenType.STAR:
                 return left_value * right_value
             if binary.operator.token_type == TokenType.STARSTAR:
-                # typeshed bug: https://github.com/python/typeshed/pull/7682
-                return left_value**right_value  # type: ignore
+                return left_value**right_value
             if binary.operator.token_type == TokenType.SLASH:
                 if right_value == 0:
                     raise InterpreterError("Division by zero", binary.right)
