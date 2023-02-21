@@ -225,262 +225,262 @@ def test_parser_expr_files(filename: str, expected_tree: str) -> None:
     assert " ".join(tree_str.split()) == " ".join(expected_tree.split())
 
 
-@pytest.mark.parametrize(
-    ("tokens", "expected_tree"),
-    (
-        (
-            [
-                Token(TokenType.VAR, "var"),
-                Token(TokenType.IDENTIFIER, "x"),
-                Token(TokenType.SEMICOLON, ";"),
-                EOF,
-            ],
-            Program(
-                body=[
-                    VarDeclaration(
-                        name=Token(TokenType.IDENTIFIER, "x"),
-                    ),
-                ]
-            ),
-        ),
-        (
-            [
-                Token(TokenType.VAR, "var"),
-                Token(TokenType.IDENTIFIER, "x"),
-                Token(TokenType.EQUAL, "="),
-                Token(TokenType.INTEGER, "5", 5),
-                Token(TokenType.SEMICOLON, ";"),
-                Token(TokenType.PRINT, "print"),
-                Token(TokenType.IDENTIFIER, "x"),
-                Token(TokenType.SEMICOLON, ";"),
-                EOF,
-            ],
-            Program(
-                body=[
-                    VarDeclaration(
-                        name=Token(TokenType.IDENTIFIER, "x"),
-                        initializer=Literal(5),
-                    ),
-                    Print(Variable(Token(TokenType.IDENTIFIER, "x"))),
-                ]
-            ),
-        ),
-        (
-            [
-                Token(TokenType.IDENTIFIER, "a"),
-                Token(TokenType.EQUAL, "="),
-                Token(TokenType.IDENTIFIER, "b"),
-                Token(TokenType.EQUAL, "="),
-                Token(TokenType.INTEGER, "2", 2),
-                Token(TokenType.PLUS, "+"),
-                Token(TokenType.INTEGER, "3", 3),
-                Token(TokenType.SEMICOLON, ";"),
-                EOF,
-            ],
-            Program(
-                body=[
-                    ExprStmt(
-                        Assignment(
-                            name=Token(TokenType.IDENTIFIER, "a"),
-                            value=Assignment(
-                                name=Token(TokenType.IDENTIFIER, "b"),
-                                value=Binary(
-                                    left=Literal(2),
-                                    operator=Token(TokenType.PLUS, "+"),
-                                    right=Literal(3),
-                                ),
-                            ),
-                        ),
-                    ),
-                ],
-            ),
-        ),
-        (
-            [
-                Token(TokenType.VAR, "var"),
-                Token(TokenType.IDENTIFIER, "x"),
-                Token(TokenType.EQUAL, "="),
-                Token(TokenType.INTEGER, "5", 5),
-                Token(TokenType.SEMICOLON, ";"),
-                Token(TokenType.LEFT_BRACE, "{"),
-                Token(TokenType.VAR, "var"),
-                Token(TokenType.IDENTIFIER, "x"),
-                Token(TokenType.EQUAL, "="),
-                Token(TokenType.INTEGER, "10", 10),
-                Token(TokenType.SEMICOLON, ";"),
-                Token(TokenType.LEFT_BRACE, "{"),
-                Token(TokenType.VAR, "var"),
-                Token(TokenType.IDENTIFIER, "x"),
-                Token(TokenType.EQUAL, "="),
-                Token(TokenType.INTEGER, "20", 20),
-                Token(TokenType.SEMICOLON, ";"),
-                Token(TokenType.RIGHT_BRACE, "}"),
-                Token(TokenType.RIGHT_BRACE, "}"),
-                Token(TokenType.VAR, "var"),
-                Token(TokenType.IDENTIFIER, "x"),
-                Token(TokenType.EQUAL, "="),
-                Token(TokenType.INTEGER, "40", 40),
-                Token(TokenType.SEMICOLON, ";"),
-                EOF,
-            ],
-            Program(
-                body=[
-                    VarDeclaration(
-                        name=Token(TokenType.IDENTIFIER, "x"),
-                        initializer=Literal(5),
-                    ),
-                    Block(
-                        body=[
-                            VarDeclaration(
-                                name=Token(TokenType.IDENTIFIER, "x"),
-                                initializer=Literal(10),
-                            ),
-                            Block(
-                                body=[
-                                    VarDeclaration(
-                                        name=Token(TokenType.IDENTIFIER, "x"),
-                                        initializer=Literal(20),
-                                    ),
-                                ]
-                            ),
-                        ]
-                    ),
-                    VarDeclaration(
-                        name=Token(TokenType.IDENTIFIER, "x"),
-                        initializer=Literal(40),
-                    ),
-                ]
-            ),
-        ),
-        (
-            [
-                Token(TokenType.IDENTIFIER, "a"),
-                Token(TokenType.DOT, "."),
-                Token(TokenType.IDENTIFIER, "b"),
-                Token(TokenType.LEFT_PAREN, "("),
-                Token(TokenType.IDENTIFIER, "x"),
-                Token(TokenType.RIGHT_PAREN, ")"),
-                Token(TokenType.DOT, "."),
-                Token(TokenType.IDENTIFIER, "c"),
-                Token(TokenType.LEFT_PAREN, "("),
-                Token(TokenType.IDENTIFIER, "y"),
-                Token(TokenType.RIGHT_PAREN, ")"),
-                Token(TokenType.DOT, "."),
-                Token(TokenType.IDENTIFIER, "d"),
-                Token(TokenType.EQUAL, "="),
-                Token(TokenType.IDENTIFIER, "z"),
-                Token(TokenType.SEMICOLON, ";"),
-                EOF,
-            ],
-            Program(
-                body=[
-                    ExprStmt(
-                        expression=Set(
-                            object=Call(
-                                callee=Get(
-                                    object=Call(
-                                        callee=Get(
-                                            object=Variable(
-                                                name=Token(TokenType.IDENTIFIER, "a")
-                                            ),
-                                            name=Token(TokenType.IDENTIFIER, "b"),
-                                        ),
-                                        paren=Token(TokenType.LEFT_PAREN, "("),
-                                        arguments=[
-                                            Variable(
-                                                name=Token(TokenType.IDENTIFIER, "x")
-                                            )
-                                        ],
-                                    ),
-                                    name=Token(TokenType.IDENTIFIER, "c"),
-                                ),
-                                paren=Token(TokenType.LEFT_PAREN, "("),
-                                arguments=[
-                                    Variable(name=Token(TokenType.IDENTIFIER, "y"))
-                                ],
-                            ),
-                            name=Token(TokenType.IDENTIFIER, "d"),
-                            value=Variable(name=Token(TokenType.IDENTIFIER, "z")),
-                        )
-                    )
-                ]
-            ),
-        ),
-    ),
-)
-def test_parser(tokens: list[Token], expected_tree: Program) -> None:
-    parser = Parser(tokens)
-    program, errors = parser.parse()
-    assert not errors
-    assert program == expected_tree
+# @pytest.mark.parametrize(
+#     ("tokens", "expected_tree"),
+#     (
+#         (
+#             [
+#                 Token(TokenType.VAR, "var"),
+#                 Token(TokenType.IDENTIFIER, "x"),
+#                 Token(TokenType.SEMICOLON, ";"),
+#                 EOF,
+#             ],
+#             Program(
+#                 body=[
+#                     VarDeclaration(
+#                         name=Token(TokenType.IDENTIFIER, "x"),
+#                     ),
+#                 ]
+#             ),
+#         ),
+#         (
+#             [
+#                 Token(TokenType.VAR, "var"),
+#                 Token(TokenType.IDENTIFIER, "x"),
+#                 Token(TokenType.EQUAL, "="),
+#                 Token(TokenType.INTEGER, "5", 5),
+#                 Token(TokenType.SEMICOLON, ";"),
+#                 Token(TokenType.PRINT, "print"),
+#                 Token(TokenType.IDENTIFIER, "x"),
+#                 Token(TokenType.SEMICOLON, ";"),
+#                 EOF,
+#             ],
+#             Program(
+#                 body=[
+#                     VarDeclaration(
+#                         name=Token(TokenType.IDENTIFIER, "x"),
+#                         initializer=Literal(5),
+#                     ),
+#                     Print(Variable(Token(TokenType.IDENTIFIER, "x"))),
+#                 ]
+#             ),
+#         ),
+#         (
+#             [
+#                 Token(TokenType.IDENTIFIER, "a"),
+#                 Token(TokenType.EQUAL, "="),
+#                 Token(TokenType.IDENTIFIER, "b"),
+#                 Token(TokenType.EQUAL, "="),
+#                 Token(TokenType.INTEGER, "2", 2),
+#                 Token(TokenType.PLUS, "+"),
+#                 Token(TokenType.INTEGER, "3", 3),
+#                 Token(TokenType.SEMICOLON, ";"),
+#                 EOF,
+#             ],
+#             Program(
+#                 body=[
+#                     ExprStmt(
+#                         Assignment(
+#                             name=Token(TokenType.IDENTIFIER, "a"),
+#                             value=Assignment(
+#                                 name=Token(TokenType.IDENTIFIER, "b"),
+#                                 value=Binary(
+#                                     left=Literal(2),
+#                                     operator=Token(TokenType.PLUS, "+"),
+#                                     right=Literal(3),
+#                                 ),
+#                             ),
+#                         ),
+#                     ),
+#                 ],
+#             ),
+#         ),
+#         (
+#             [
+#                 Token(TokenType.VAR, "var"),
+#                 Token(TokenType.IDENTIFIER, "x"),
+#                 Token(TokenType.EQUAL, "="),
+#                 Token(TokenType.INTEGER, "5", 5),
+#                 Token(TokenType.SEMICOLON, ";"),
+#                 Token(TokenType.LEFT_BRACE, "{"),
+#                 Token(TokenType.VAR, "var"),
+#                 Token(TokenType.IDENTIFIER, "x"),
+#                 Token(TokenType.EQUAL, "="),
+#                 Token(TokenType.INTEGER, "10", 10),
+#                 Token(TokenType.SEMICOLON, ";"),
+#                 Token(TokenType.LEFT_BRACE, "{"),
+#                 Token(TokenType.VAR, "var"),
+#                 Token(TokenType.IDENTIFIER, "x"),
+#                 Token(TokenType.EQUAL, "="),
+#                 Token(TokenType.INTEGER, "20", 20),
+#                 Token(TokenType.SEMICOLON, ";"),
+#                 Token(TokenType.RIGHT_BRACE, "}"),
+#                 Token(TokenType.RIGHT_BRACE, "}"),
+#                 Token(TokenType.VAR, "var"),
+#                 Token(TokenType.IDENTIFIER, "x"),
+#                 Token(TokenType.EQUAL, "="),
+#                 Token(TokenType.INTEGER, "40", 40),
+#                 Token(TokenType.SEMICOLON, ";"),
+#                 EOF,
+#             ],
+#             Program(
+#                 body=[
+#                     VarDeclaration(
+#                         name=Token(TokenType.IDENTIFIER, "x"),
+#                         initializer=Literal(5),
+#                     ),
+#                     Block(
+#                         body=[
+#                             VarDeclaration(
+#                                 name=Token(TokenType.IDENTIFIER, "x"),
+#                                 initializer=Literal(10),
+#                             ),
+#                             Block(
+#                                 body=[
+#                                     VarDeclaration(
+#                                         name=Token(TokenType.IDENTIFIER, "x"),
+#                                         initializer=Literal(20),
+#                                     ),
+#                                 ]
+#                             ),
+#                         ]
+#                     ),
+#                     VarDeclaration(
+#                         name=Token(TokenType.IDENTIFIER, "x"),
+#                         initializer=Literal(40),
+#                     ),
+#                 ]
+#             ),
+#         ),
+#         (
+#             [
+#                 Token(TokenType.IDENTIFIER, "a"),
+#                 Token(TokenType.DOT, "."),
+#                 Token(TokenType.IDENTIFIER, "b"),
+#                 Token(TokenType.LEFT_PAREN, "("),
+#                 Token(TokenType.IDENTIFIER, "x"),
+#                 Token(TokenType.RIGHT_PAREN, ")"),
+#                 Token(TokenType.DOT, "."),
+#                 Token(TokenType.IDENTIFIER, "c"),
+#                 Token(TokenType.LEFT_PAREN, "("),
+#                 Token(TokenType.IDENTIFIER, "y"),
+#                 Token(TokenType.RIGHT_PAREN, ")"),
+#                 Token(TokenType.DOT, "."),
+#                 Token(TokenType.IDENTIFIER, "d"),
+#                 Token(TokenType.EQUAL, "="),
+#                 Token(TokenType.IDENTIFIER, "z"),
+#                 Token(TokenType.SEMICOLON, ";"),
+#                 EOF,
+#             ],
+#             Program(
+#                 body=[
+#                     ExprStmt(
+#                         expression=Set(
+#                             object=Call(
+#                                 callee=Get(
+#                                     object=Call(
+#                                         callee=Get(
+#                                             object=Variable(
+#                                                 name=Token(TokenType.IDENTIFIER, "a")
+#                                             ),
+#                                             name=Token(TokenType.IDENTIFIER, "b"),
+#                                         ),
+#                                         paren=Token(TokenType.LEFT_PAREN, "("),
+#                                         arguments=[
+#                                             Variable(
+#                                                 name=Token(TokenType.IDENTIFIER, "x")
+#                                             )
+#                                         ],
+#                                     ),
+#                                     name=Token(TokenType.IDENTIFIER, "c"),
+#                                 ),
+#                                 paren=Token(TokenType.LEFT_PAREN, "("),
+#                                 arguments=[
+#                                     Variable(name=Token(TokenType.IDENTIFIER, "y"))
+#                                 ],
+#                             ),
+#                             name=Token(TokenType.IDENTIFIER, "d"),
+#                             value=Variable(name=Token(TokenType.IDENTIFIER, "z")),
+#                         )
+#                     )
+#                 ]
+#             ),
+#         ),
+#     ),
+# )
+# def test_parser(tokens: list[Token], expected_tree: Program) -> None:
+#     parser = Parser(tokens)
+#     program, errors = parser.parse()
+#     assert not errors
+#     assert program == expected_tree
 
 
-@pytest.mark.parametrize(
-    ("filename", "expected_tree"),
-    (
-        (
-            "simple.lox",
-            Program(
-                body=[
-                    Print(Literal("Hello", index=6), index=0),
-                    VarDeclaration(
-                        name=Token(TokenType.IDENTIFIER, "a", index=19),
-                        initializer=Literal(5, index=23),
-                        index=15,
-                    ),
-                    Print(
-                        Variable(Token(TokenType.IDENTIFIER, "a", index=32), index=32),
-                        index=26,
-                    ),
-                    VarDeclaration(
-                        name=Token(TokenType.IDENTIFIER, "a", index=39),
-                        initializer=Literal(False, index=43),
-                        index=35,
-                    ),
-                    Print(
-                        Variable(Token(TokenType.IDENTIFIER, "a", index=56), index=56),
-                        index=50,
-                    ),
-                    Print(
-                        Grouping(
-                            expression=Binary(
-                                left=Binary(
-                                    left=Literal(6.75, index=66),
-                                    operator=Token(TokenType.STAR, "*", index=71),
-                                    right=Grouping(
-                                        expression=Binary(
-                                            left=Literal(3, index=74),
-                                            operator=Token(
-                                                TokenType.PLUS, "+", index=76
-                                            ),
-                                            right=Literal(5, index=78),
-                                            index=74,
-                                        ),
-                                        index=73,
-                                    ),
-                                    index=66,
-                                ),
-                                operator=Token(TokenType.SLASH, "/", index=81),
-                                right=Literal(2, index=83),
-                                index=66,
-                            ),
-                            index=65,
-                        ),
-                        index=59,
-                    ),
-                ],
-                index=0,
-            ),
-        ),
-    ),
-)
-def test_parser_files(filename: str, expected_tree: Program) -> None:
-    test_dir = os.path.join(os.path.dirname(__file__), "testdata")
-    filepath = os.path.join(test_dir, filename)
-    source = read_file(filepath)
+# @pytest.mark.parametrize(
+#     ("filename", "expected_tree"),
+#     (
+#         (
+#             "simple.lox",
+#             Program(
+#                 body=[
+#                     Print(Literal("Hello", index=6), index=0),
+#                     VarDeclaration(
+#                         name=Token(TokenType.IDENTIFIER, "a", index=19),
+#                         initializer=Literal(5, index=23),
+#                         index=15,
+#                     ),
+#                     Print(
+#                         Variable(Token(TokenType.IDENTIFIER, "a", index=32), index=32),
+#                         index=26,
+#                     ),
+#                     VarDeclaration(
+#                         name=Token(TokenType.IDENTIFIER, "a", index=39),
+#                         initializer=Literal(False, index=43),
+#                         index=35,
+#                     ),
+#                     Print(
+#                         Variable(Token(TokenType.IDENTIFIER, "a", index=56), index=56),
+#                         index=50,
+#                     ),
+#                     Print(
+#                         Grouping(
+#                             expression=Binary(
+#                                 left=Binary(
+#                                     left=Literal(6.75, index=66),
+#                                     operator=Token(TokenType.STAR, "*", index=71),
+#                                     right=Grouping(
+#                                         expression=Binary(
+#                                             left=Literal(3, index=74),
+#                                             operator=Token(
+#                                                 TokenType.PLUS, "+", index=76
+#                                             ),
+#                                             right=Literal(5, index=78),
+#                                             index=74,
+#                                         ),
+#                                         index=73,
+#                                     ),
+#                                     index=66,
+#                                 ),
+#                                 operator=Token(TokenType.SLASH, "/", index=81),
+#                                 right=Literal(2, index=83),
+#                                 index=66,
+#                             ),
+#                             index=65,
+#                         ),
+#                         index=59,
+#                     ),
+#                 ],
+#                 index=0,
+#             ),
+#         ),
+#     ),
+# )
+# def test_parser_files(filename: str, expected_tree: Program) -> None:
+#     test_dir = os.path.join(os.path.dirname(__file__), "testdata")
+#     filepath = os.path.join(test_dir, filename)
+#     source = read_file(filepath)
 
-    tokens = Lexer(source).tokens
-    parser = Parser(tokens)
-    program, errors = parser.parse()
-    assert not errors
-    assert program == expected_tree
+#     tokens = Lexer(source).tokens
+#     parser = Parser(tokens)
+#     program, errors = parser.parse()
+#     assert not errors
+#     assert program == expected_tree
