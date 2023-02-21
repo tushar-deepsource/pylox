@@ -24,3 +24,8 @@ jobs:
         run: pip install -r requirements-dev.txt
       - name: Test with pytest
         run: tox
+      - name: Post coverage report to DeepSource
+        run: |
+          coverage xml
+          curl https://deepsource.io/cli | sh
+          ./bin/deepsource report --analyzer test-coverage --key python --value-file ./coverage.xml
