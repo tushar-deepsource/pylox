@@ -8,11 +8,11 @@ from pylox.tokens import EOF, KEYWORD_TOKENS, Token, TokenType
 
 
 class LexError(LoxError):
-    ...
+    pass
 
 
 class LexIncompleteError(LexError):
-    ...
+    pass
 
 
 class Lexer:
